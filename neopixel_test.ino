@@ -151,63 +151,18 @@ void showReceivedData(){
     else if (results.value == 0xFF7A85){ // Three
       rainbow(35); //Blue
     }
+    else if (results.value == 0xFF10EF){
+      random_fill();
+    }
     delay(10);
     results.value = 0xFFFFFF;
   }
 }
-
-  
-  /*switch(results.value){
-    case 0xFF30CF: // One
-    chase(strip.Color(255, 0, 0)); // Red
-    break;
-    case 0xFF18E7: // Two
-    chase(strip.Color(0, 255, 0)); // Green
-    break;
-    case 0xFF7A85: // Three
-    chase(strip.Color(0, 0, 255)); //Blue
-    break;
-    case 0xFF10EF: // Four
-    chase(strip.Color(255, 255, 0)); // Yellow
-    break;
-    case 0xFF38C7: // Five
-    chase(strip.Color(0, 255, 255)); // Cyan
-    break;
-    case 0xFF5AA5: // Six
-    chase(strip.Color(255, 0, 255)); // Violet
-    break;
-    case 0xFF42BD: // Seven
-    set_colour(strip.Color(6, 76, 161)); // Light blue
-    break;
-    case 0xFF4AB5: //Eight
-    chase_leds = true;
-    theaterChase(strip.Color(6, 76, 255), 10);
-    case 0xFFC23D: // Pause play
-    rainbow(10);
-    break;
-    case 0xFFFFFF: // Hold
-    holding_loop += 1;
-    if (holding_loop > 10){
-      set_colour(strip.Color(25, 186, 203));
-    }
-    case 0xFF52AD: // Nine
-    random_fill();
-    case 0xFF906F: // EQ
-    lightMusic();
- }
-}*/
-
-  /*chase(strip.Color(255, 255, 255)); //White
-  chase(strip.Color(0, 255, 0)); // Green
-  chase(strip.Color(255, 0, 0)); // Red
-  chase(strip.Color(0, 0, 255)); // Blue
-  chase(strip.Color(185, 132, 1)); // Light Yellow
-*/
-
+/*
 static void lightMusic(){
-  /*cRed = random(0, 255);
+  cRed = random(0, 255);
   cGreen = random(0, 255);
-  cBlue = random(0, 255);*/
+  cBlue = random(0, 255);
   sensorValue = analogRead(soundPin);
   //Serial.println(sensorValue, DEC);
   delay(100);
@@ -215,20 +170,26 @@ static void lightMusic(){
   for(int i = 0; i < 10; i++){
     Serial.print(lastTenValues[i]);
   }
-}
+}*/
 
 static void random_fill(){
-  while(randUsed < strip.numPixels()*10){
-    randPixel = random(0, strip.numPixels());
-    cRed = random(0, 255);
-    cGreen = random(0, 255);
-    cBlue = random(0, 255);
-    strip.setPixelColor(randPixel, strip.Color(cRed, cGreen, cBlue));
-    randUsed += 1;
-    strip.show();
-    delay(30);
+  results.value = 0xFFFFFF;
+  while(results.value == 0xFFFFFF){
+    irrecv.resume();
+    while(randUsed < strip.numPixels()*10){
+      if (!irrecv.decode(&results)){
+      }
+      randPixel = random(0, strip.numPixels());
+      cRed = random(0, 255);
+      cGreen = random(0, 255);
+      cBlue = random(0, 255);
+      strip.setPixelColor(randPixel, strip.Color(cRed, cGreen, cBlue));
+      randUsed += 1;
+      strip.show();
+      delay(30);
+    }
+    randUsed = 0;
   }
-  randUsed = 0;
 }
 
 static void set_colour(uint32_t c){
@@ -240,11 +201,11 @@ static void set_colour(uint32_t c){
 
 static void chase(uint32_t c) {
   delay(10);
-  while(results.value == 0xFF30CF or results.value == 0xFF18E7 or results.value == 0xFF7A85){
+  results.value = 0xFFFFFF;
+  while(results.value == 0xFFFFFF){
     irrecv.resume();
     for (uint32_t i = 0; i < strip.numPixels()+30; i++) {
       if (!irrecv.decode(&results)){
-        Serial.println("none");
       }
       //delay(5);
       strip.setPixelColor(i, 0);// Set them to blank
@@ -257,12 +218,18 @@ static void chase(uint32_t c) {
 }
 
 void rainbow(int wait) {
-  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
-    for(int i=0; i<strip.numPixels(); i++) {
-      int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
-      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+  delay(10);
+  results.value = 0xFFFFFF;
+  while(results.value == 0xFFFFFF){
+    for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+      for(int i=0; i<strip.numPixels(); i++) {
+        if (!irrecv.decode(&results)){
+        }
+        int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
+        strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+      }
+      strip.show();
+      delay(wait);
     }
-    strip.show();
-    delay(wait);
   }
 }
